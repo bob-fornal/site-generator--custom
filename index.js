@@ -8,7 +8,7 @@ const readFile = (path, filename) => {
   return rawfile;
 };
 
-const readHTMLFilesFromDirectory = (dirname) => {
+const filenamesFromDirectory = (dirname) => {
  const rawFilenames = fs.readdirSync(dirname);
  return rawFilenames;
 }
@@ -32,14 +32,14 @@ const main = () => {
   const outPath = path.resolve('dist') + '\\';
 
   const templates = {};
-  const templateFiles = readHTMLFilesFromDirectory(templatePath);
+  const templateFiles = filenamesFromDirectory(templatePath);
   templateFiles.forEach(file => {
     console.log(`Reading Template: ${ file }`);
     templates[file] = readFile(templatePath, file);
   });
 
   const files = {};
-  const workingFiles = readHTMLFilesFromDirectory(srcPath);
+  const workingFiles = filenamesFromDirectory(srcPath);
   workingFiles.forEach(file => {
     if (file.substring(file.length - 5) === '.html') {
       console.log(`Reading File: ${ file }`);
