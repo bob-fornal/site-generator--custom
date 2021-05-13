@@ -5,14 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "fs-extra": "^10.0.0",
     "mkdirp": "^1.0.4"
-  },
-  "dependencies": {
-    "fs-extra": "^10.0.0"
   }
 }

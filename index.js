@@ -57,7 +57,7 @@ class BuildTool {
   clearSrcDirectory = () => {
     console.log('Removing DIST folder');
     if (fs.existsSync(this.distPath)) {
-      fs.rmdirSync(this.distPath, { recursive: true });
+      fs.rmSync(this.distPath, { recursive: true });
     }
   };
 
@@ -89,24 +89,13 @@ class BuildTool {
     }
   };
 
-  processJSFiles = () => {
-    console.log('Moving JS Files');
-    fse.copySync(this.srcPath + 'js', this.distPath + 'js', { overwrite: true }, (error) => {
+  processStaticFiles = (title, path) => {
+    console.log(`Moving ${ title } Files`);
+    fse.copySync(this.srcPath + path, this.distPath + path, { overwrite: true }, (error) => {
       if (error) {
         throw error;
       } else {
-        console.log('Moved JS Files');
-      }
-    });
-  };
-
-  processAssetFiles = () => {
-    console.log('Moving Asset Files');
-    fse.copySync(this.srcPath + 'assets', this.distPath + 'assets', { overwrite: true }, (error) => {
-      if (error) {
-        throw error;
-      } else {
-        console.log('Moved Asset Files');
+        console.log(`Moved ${ title } Files`);
       }
     });
   };
@@ -116,8 +105,9 @@ class BuildTool {
     this.getTemplates();
     this.getHTMLFiles();
     this.processFiles();
-    this.processJSFiles();
-    this.processAssetFiles();
+    this.processStaticFiles('JS', 'js');
+    this.processStaticFiles('CSS', 'styles');
+    this.processStaticFiles('Assets', 'assets');
   
     console.log('done.');
   };

@@ -9,5 +9,5 @@ npm install
 ## Running
 
 ```javascript
-node index.js
+npm run build
 ```
