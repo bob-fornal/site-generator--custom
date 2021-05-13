@@ -52,7 +52,7 @@ const main = () => {
     const contents = templatize(files[key], templates);
     saveFile(outPath, key, contents);
   }
-
+  console.log('done.');
 };
 
 main();
