@@ -1,15 +1,29 @@
 # compiled output
-dist/
+/dist
 
 # dependencies
-node_modules/
+/node_modules
 
 # IDEs and editors
-.idea/
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
 
 # misc
-coverage/
+/coverage
 npm-debug.log
 
 # System Files
-.DS_Store/
+.DS_Store
