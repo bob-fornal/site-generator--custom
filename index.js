@@ -3,35 +3,19 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-const readfile = (filename) => {
-  const rawfile = fs.readFileSync(filename, 'utf8');
+const readFile = (path, filename) => {
+  const rawfile = fs.readFileSync(path + filename, 'utf8');
   return rawfile;
 };
 
-const readFiles = (dirname, onFileContent, onError) => {
-  fs.readdir(dirname, (error, filenames) => {
-    if (error) {
-      onError(error);
-      return;
-    }
-    filenames.forEach((filename) => {
-      if (filename.substring(filename.length - 5) === '.html') {
-        fs.readFile(dirname + filename, 'utf-8', function(err, content) {
-          if (err) {
-            onError(err);
-            return;
-          }
-          onFileContent(filename, content);
-        });  
-      }
-    });
-  });
+const readHTMLFilesFromDirectory = (dirname) => {
+ const rawFilenames = fs.readdirSync(dirname);
+ return rawFilenames;
 }
 
 const templatize = (content, templates) => {
   for (let key in templates) {
     const match = `<!-- TEMPLATE: ${ key } -->`;
-    console.log(match);
     content = content.replace(match, templates[key]);
   }
   return content;
@@ -44,30 +28,30 @@ const saveFile = (path, filename, contents) => {
 
 const main = () => {
   const srcPath = path.resolve('src') + '\\';
+  const templatePath = srcPath + 'templates\\';
   const outPath = path.resolve('dist') + '\\';
 
   const templates = {};
-  readFiles(`${ srcPath }templates\\`, (filename, content) => {
-    templates[filename] = content;
-  }, (error) => {
-    throw error;
+  const templateFiles = readHTMLFilesFromDirectory(templatePath);
+  templateFiles.forEach(file => {
+    console.log(`Reading Template: ${ file }`);
+    templates[file] = readFile(templatePath, file);
   });
 
   const files = {};
-  readFiles(srcPath, (filename, content) => {
-    files[filename] = content;
-  }, (error) => {
-    throw error;
+  const workingFiles = readHTMLFilesFromDirectory(srcPath);
+  workingFiles.forEach(file => {
+    if (file.substring(file.length - 5) === '.html') {
+      console.log(`Reading File: ${ file }`);
+      files[file] = readFile(srcPath, file);
+    }
   });
 
-  setTimeout(() => {
-    console.log(templates, files);
-    for (let key in files) {
-      console.log(key);
-      const contents = templatize(files[key], templates);
-      saveFile(outPath, key, contents);
-    }  
-  }, 100);
+  for (let key in files) {
+    console.log(`Processing File: ${ key }`);
+    const contents = templatize(files[key], templates);
+    saveFile(outPath, key, contents);
+  }
 
 };
 
