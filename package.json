@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "mkdirp": "^1.0.4"
+  },
+  "dependencies": {
+    "fs-extra": "^10.0.0"
   }
 }

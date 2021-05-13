@@ -2,57 +2,127 @@
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
+import fse from 'fs-extra';
 
-const readFile = (path, filename) => {
-  const rawfile = fs.readFileSync(path + filename, 'utf8');
-  return rawfile;
-};
+class BuildTool {
 
-const filenamesFromDirectory = (dirname) => {
- const rawFilenames = fs.readdirSync(dirname);
- return rawFilenames;
-}
+  srcString = '';
+  distString = '';
+  templateString = '';
 
-const templatize = (content, templates) => {
-  for (let key in templates) {
-    const match = `<!-- TEMPLATE: ${ key } -->`;
-    content = content.replace(match, templates[key]);
+  srcPath = '';
+  templatePath = '';
+  distPath = '';
+
+  templates = {};
+  files = {};
+
+  constructor(
+    src = 'src',
+    dist = 'dist',
+    templates = 'templates'
+  ) {
+    this.srcString = src;
+    this.distString = dist;
+    this.templateString = templates;
+
+    this.srcPath = path.resolve(this.srcString) + '\\';
+    this.templatePath = this.srcPath + `${ this.templateString }\\`;
+    this.distPath = path.resolve(this.distString) + '\\';
   }
-  return content;
-};
 
-const saveFile = (path, filename, contents) => {
-	mkdirp.sync(path);
-	fs.writeFileSync(path + filename, contents)
-}
-
-const main = () => {
-  const srcPath = path.resolve('src') + '\\';
-  const templatePath = srcPath + 'templates\\';
-  const outPath = path.resolve('dist') + '\\';
-
-  const templates = {};
-  const templateFiles = filenamesFromDirectory(templatePath);
-  templateFiles.forEach(file => {
-    console.log(`Reading Template: ${ file }`);
-    templates[file] = readFile(templatePath, file);
-  });
-
-  const files = {};
-  const workingFiles = filenamesFromDirectory(srcPath);
-  workingFiles.forEach(file => {
-    if (file.substring(file.length - 5) === '.html') {
-      console.log(`Reading File: ${ file }`);
-      files[file] = readFile(srcPath, file);
+  readFile = (path, filename) => {
+    const rawfile = fs.readFileSync(path + filename, 'utf8');
+    return rawfile;
+  };
+  
+  filenamesFromDirectory = (dirname) => {
+   const rawFilenames = fs.readdirSync(dirname);
+   return rawFilenames;
+  }
+  
+  templatize = (content, templates) => {
+    for (let key in templates) {
+      const match = `<!-- TEMPLATE: ${ key } -->`;
+      content = content.replace(match, templates[key]);
     }
-  });
-
-  for (let key in files) {
-    console.log(`Processing File: ${ key }`);
-    const contents = templatize(files[key], templates);
-    saveFile(outPath, key, contents);
+    return content;
+  };
+  
+  saveFile = (path, filename, contents) => {
+    mkdirp.sync(path);
+    fs.writeFileSync(path + filename, contents)
   }
-  console.log('done.');
-};
 
-main();
+  clearSrcDirectory = () => {
+    console.log('Removing DIST folder');
+    if (fs.existsSync(this.distPath)) {
+      fs.rmdirSync(this.distPath, { recursive: true });
+    }
+  };
+
+  getTemplates = () => {
+    this.templates = {};
+    const templateFiles = this.filenamesFromDirectory(this.templatePath);
+    templateFiles.forEach(file => {
+      console.log(`Reading Template: ${ file }`);
+      this.templates[file] = this.readFile(this.templatePath, file);
+    });  
+  };
+
+  getHTMLFiles = () => {
+    this.files = {};
+    const workingFiles = this.filenamesFromDirectory(this.srcPath);
+    workingFiles.forEach(file => {
+      if (file.substring(file.length - 5) === '.html') {
+        console.log(`Reading File: ${ file }`);
+        this.files[file] = this.readFile(this.srcPath, file);
+      }
+    });
+  };
+
+  processFiles = () => {
+    for (let key in this.files) {
+      console.log(`Processing File: ${ key }`);
+      const contents = this.templatize(this.files[key], this.templates);
+      this.saveFile(this.distPath, key, contents);
+    }
+  };
+
+  processJSFiles = () => {
+    console.log('Moving JS Files');
+    fse.copySync(this.srcPath + 'js', this.distPath + 'js', { overwrite: true }, (error) => {
+      if (error) {
+        throw error;
+      } else {
+        console.log('Moved JS Files');
+      }
+    });
+  };
+
+  processAssetFiles = () => {
+    console.log('Moving Asset Files');
+    fse.copySync(this.srcPath + 'assets', this.distPath + 'assets', { overwrite: true }, (error) => {
+      if (error) {
+        throw error;
+      } else {
+        console.log('Moved Asset Files');
+      }
+    });
+  };
+  
+  process = () => {  
+    this.clearSrcDirectory();
+    this.getTemplates();
+    this.getHTMLFiles();
+    this.processFiles();
+    this.processJSFiles();
+    this.processAssetFiles();
+  
+    console.log('done.');
+  };
+  
+}
+
+const buildTool = new BuildTool();
+buildTool.process();
