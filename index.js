@@ -1,6 +1,5 @@
 
 import fs from 'fs';
-import mkdirp from 'mkdirp';
 import path from 'path';
 import fse from 'fs-extra';
 
@@ -26,20 +25,15 @@ class BuildTool {
     this.distString = dist;
     this.templateString = templates;
 
-    this.srcPath = path.resolve(this.srcString) + '\\';
-    this.templatePath = this.srcPath + `${ this.templateString }\\`;
-    this.distPath = path.resolve(this.distString) + '\\';
+    this.srcPath = path.resolve(this.srcString);
+    this.templatePath = path.join(this.srcPath, this.templateString);
+    this.distPath = path.resolve(this.distString);
   }
 
-  readFile = (path, filename) => {
-    const rawfile = fs.readFileSync(path + filename, 'utf8');
-    return rawfile;
-  };
-  
-  filenamesFromDirectory = (dirname) => {
-   const rawFilenames = fs.readdirSync(dirname);
-   return rawFilenames;
-  }
+  // Internal Functionality
+  readFilenamesFromDirectory = (dirname) => fs.readdirSync(dirname); 
+  readFile = (to, filename) => fs.readFileSync(path.join(to, filename), 'utf8');
+  saveFile = (to, filename, contents) => fs.writeFileSync(path.join(to, filename), contents);
   
   templatize = (content, templates) => {
     for (let key in templates) {
@@ -49,21 +43,18 @@ class BuildTool {
     return content;
   };
   
-  saveFile = (path, filename, contents) => {
-    mkdirp.sync(path);
-    fs.writeFileSync(path + filename, contents)
-  }
-
+  // Processes
   clearSrcDirectory = () => {
     console.log('Removing DIST folder');
     if (fs.existsSync(this.distPath)) {
       fs.rmSync(this.distPath, { recursive: true });
     }
+    fs.mkdirSync(this.distPath);
   };
 
   getTemplates = () => {
     this.templates = {};
-    const templateFiles = this.filenamesFromDirectory(this.templatePath);
+    const templateFiles = this.readFilenamesFromDirectory(this.templatePath);
     templateFiles.forEach(file => {
       console.log(`Reading Template: ${ file }`);
       this.templates[file] = this.readFile(this.templatePath, file);
@@ -72,7 +63,7 @@ class BuildTool {
 
   getHTMLFiles = () => {
     this.files = {};
-    const workingFiles = this.filenamesFromDirectory(this.srcPath);
+    const workingFiles = this.readFilenamesFromDirectory(this.srcPath);
     workingFiles.forEach(file => {
       if (file.substring(file.length - 5) === '.html') {
         console.log(`Reading File: ${ file }`);
@@ -81,7 +72,7 @@ class BuildTool {
     });
   };
 
-  processFiles = () => {
+  processHTMLFiles = () => {
     for (let key in this.files) {
       console.log(`Processing File: ${ key }`);
       const contents = this.templatize(this.files[key], this.templates);
@@ -89,9 +80,11 @@ class BuildTool {
     }
   };
 
-  processStaticFiles = (title, path) => {
+  processStaticFiles = (title, folder) => {
     console.log(`Moving ${ title } Files`);
-    fse.copySync(this.srcPath + path, this.distPath + path, { overwrite: true }, (error) => {
+    const from = path.join(this.srcPath, folder);
+    const to = path.join(this.distPath, folder);
+    fse.copySync(from, to, { overwrite: true }, (error) => {
       if (error) {
         throw error;
       } else {
@@ -104,7 +97,7 @@ class BuildTool {
     this.clearSrcDirectory();
     this.getTemplates();
     this.getHTMLFiles();
-    this.processFiles();
+    this.processHTMLFiles();
     this.processStaticFiles('JS', 'js');
     this.processStaticFiles('CSS', 'styles');
     this.processStaticFiles('Assets', 'assets');
