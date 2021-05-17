@@ -4,7 +4,7 @@
 
 ```javascript
 npm install
-npm install 0g @digitak/esrun
+npm install -g @digitak/esrun
 ```
 
 ## Running
