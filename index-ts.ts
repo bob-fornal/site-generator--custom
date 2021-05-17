@@ -1,7 +1,7 @@
 
-import BuildToolClass from './classes/build-tool-class';
+import BuildToolClassTS from './classes/build-tool-class-ts';
 
-class BuildTool extends BuildToolClass {
+class BuildTool extends BuildToolClassTS {
 
   // Implementation Tasks
   getTemplates = (): void => {
